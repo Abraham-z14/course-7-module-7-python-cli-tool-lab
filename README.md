@@ -1,192 +1,266 @@
+# Python Task Manager CLI
 
-# Module Lab: Building a Python Command-Line Interface Tool
+A Python command-line task manager built with object-oriented programming and the standard-library `argparse` module.
 
-## Learning Goals
+The project demonstrates how CLI commands can interact with Python classes to create users, add tasks, find tasks, and mark tasks as completed.
 
-- Build modular and user-friendly command-line applications using `argparse`.
-- Apply object-oriented programming (OOP) to map real-world objects to CLI commands.
-- Validate user input and provide helpful feedback.
-- Structure CLI tools for maintainability and scalability.
+## Features
 
-## Introduction
+The application supports:
 
-In this lab, you'll design and implement a Python Command-Line Interface (CLI) tool that models real-world behavior using OOP. You'll use Python's built-in `argparse` module to define commands, and object-oriented classes to manage task-related actions.
+- Creating users as needed
+- Adding tasks to users
+- Searching for tasks by title
+- Marking tasks as completed
+- Displaying confirmation messages
+- Displaying helpful messages when users or tasks cannot be found
+- Routing CLI commands with `argparse`
+- Separating CLI logic from object-oriented models
 
-The CLI tool will allow users to:
+## Project Design
 
-- Add tasks to a user account via `add-task`
-- Mark tasks as complete via `complete-task`
-- Display feedback directly in the terminal
+The application uses two model classes and one CLI controller.
 
-This lab combines CLI architecture with OOP principles to help you build intuitive and testable developer tools.
+### `Task`
 
-## Setup Instructions
+Represents one task.
 
-### Fork and Clone the Repository
+Each task contains:
 
-1. Go to the provided GitHub repository link.
-2. Fork the repository to your GitHub account.
-3. Clone the forked repository to your local machine using:
+- `title`
+- `completed`
 
-```bash
-git clone <repo-url>
-cd module-lab-python-cli-tool
+New tasks begin with:
+
+```python
+completed = False
 ```
 
-### Install Python and Dependencies
+Calling:
 
-Ensure Python is installed:
+```python
+task.complete()
+```
+
+changes the task to:
+
+```python
+completed = True
+```
+
+and prints a confirmation message.
+
+Example:
+
+```text
+✅ Task 'Finish lab' completed.
+```
+
+### `User`
+
+Represents a user and their tasks.
+
+Each user contains:
+
+- `name`
+- `tasks`
+
+The `tasks` attribute begins as an empty list.
+
+### `add_task()`
+
+Adds a `Task` object to the user's task list.
+
+Example output:
+
+```text
+📌 Task 'Submit report' added to Alice.
+```
+
+### `get_task_by_title()`
+
+Searches the user's tasks for a matching title.
+
+If the task exists, the method returns the matching `Task` object.
+
+If no matching task exists, it returns `None`.
+
+## CLI Commands
+
+The CLI uses Python's built-in `argparse` module and subcommands.
+
+### Add a Task
+
+Run:
+
+```bash
+python -m lib.cli_tool add-task Alice "Submit report"
+```
+
+Example output:
+
+```text
+📌 Task 'Submit report' added to Alice.
+```
+
+The command provides:
+
+```text
+add-task
+   │
+   ├── Alice          → user
+   └── Submit report  → task title
+```
+
+### Complete a Task
+
+The CLI also supports:
+
+```bash
+python -m lib.cli_tool complete-task Alice "Submit report"
+```
+
+The completion command searches the in-memory user data for the requested user and task before calling the task's `complete()` method.
+
+## In-Memory State
+
+This project intentionally stores users and tasks in memory using:
+
+```python
+users = {}
+```
+
+The data exists only while that Python process is running.
+
+Because there is no database or file persistence, running `add-task` and `complete-task` as two completely separate processes does not preserve the task between commands.
+
+The project tests completion behavior within a shared Python process.
+
+Persistent storage could be added later using JSON, SQLite, or another database.
+
+## Argparse
+
+The CLI uses subparsers to route commands.
+
+Supported commands include:
+
+```text
+add-task
+complete-task
+```
+
+Arguments are converted into values such as:
+
+```python
+args.user
+args.title
+```
+
+The appropriate function is then called based on the selected command.
+
+## Package Structure
+
+The CLI is run as a Python module:
+
+```bash
+python -m lib.cli_tool
+```
+
+The CLI imports its models using a package-relative import:
+
+```python
+from .models import Task, User
+```
+
+This allows Python to correctly locate `models.py` inside the `lib` package.
+
+## Technologies
+
+- Python 3.12.11
+- Argparse
+- Object-Oriented Programming
+- Pytest
+- Pipenv
+- Git
+- GitHub
+
+## Setup
+
+Clone the repository:
+
+```bash
+git clone git@github.com:Abraham-z14/course-7-module-7-python-cli-tool-lab.git
+cd course-7-module-7-python-cli-tool-lab
+```
+
+Create/install the project environment:
+
+```bash
+pipenv --python ~/.pyenv/versions/3.12.11/bin/python install
+```
+
+Enter the environment:
+
+```bash
+pipenv shell
+```
+
+Verify Python:
 
 ```bash
 python --version
 ```
 
-Optionally, create and activate a virtual environment:
+Expected version:
+
+```text
+Python 3.12.11
+```
+
+## Testing
+
+Run the automated tests with:
 
 ```bash
-python -m venv venv
-source venv/bin/activate  # macOS/Linux
-venv\Scripts\activate   # Windows
+python -m pytest
 ```
 
-Install dependencies:
+Current result:
 
-```bash
-pip install -r requirements.txt
+```text
+2 passed
 ```
 
----
+The tests verify:
 
-## Tasks
+- Adding a task through the CLI
+- Using the `User` and `Task` models
+- Marking a task as completed
+- Correct terminal confirmation messages
 
-### Task 1: Define the Problem
+## Completed Test Suite
 
-Build a CLI tool that allows users to:
+![Completed test suite](images/tests-passing.png)
 
-- Add tasks to their name
-- Mark tasks as complete
-- See helpful feedback after actions
+## Project Structure
 
-The tool should simulate how users interact with a task manager, mapping commands to behavior using classes.
-
----
-
-### Task 2: Determine the Design
-
-Your application will be split into:
-
-- A `Task` class to represent individual tasks
-- A `User` class to group tasks under a user's name
-- A CLI controller using `argparse` with `subparsers` to route actions
-
-This design keeps your logic modular, object-oriented, and easy to extend.
-
----
-
-### Task 3: Develop the CLI Tool
-
-#### Step 1: Define Your Classes in `lib/models.py`
-
-```python
-class Task:
-    def __init__(self, title):
-        self.title = title
-        self.completed = False
-
-    def complete(self):
-        self.completed = True
-        print(f"✅ Task '{self.title}' completed.")
-
-class User:
-    def __init__(self, name):
-        self.name = name
-        self.tasks = []
-
-    def add_task(self, task):
-        self.tasks.append(task)
-        print(f"📌 Task '{task.title}' added to {self.name}.")
+```text
+course-7-module-7-python-cli-tool-lab/
+├── images/
+│   └── tests-passing.png
+├── lib/
+│   ├── __init__.py
+│   ├── cli_tool.py
+│   └── models.py
+├── testing/
+│   ├── __init__.py
+│   └── test_cli_tool.py
+├── Pipfile
+├── Pipfile.lock
+├── pytest.ini
+└── README.md
 ```
 
-#### Step 2: Create the CLI in `lib/cli_tool.py`
+## Author
 
-```python
-import argparse
-from lib.models import Task, User
-
-users = {}
-
-def add_task(args):
-    user = users.get(args.user) or User(args.user)
-    users[args.user] = user
-    task = Task(args.title)
-    user.add_task(task)
-
-def complete_task(args):
-    user = users.get(args.user)
-    if user:
-        for task in user.tasks:
-            if task.title == args.title:
-                task.complete()
-                return
-        print("❌ Task not found.")
-    else:
-        print("❌ User not found.")
-
-def main():
-    parser = argparse.ArgumentParser(description="Task Manager CLI")
-    subparsers = parser.add_subparsers()
-
-    add_parser = subparsers.add_parser("add-task", help="Add a new task")
-    add_parser.add_argument("user")
-    add_parser.add_argument("title")
-    add_parser.set_defaults(func=add_task)
-
-    complete_parser = subparsers.add_parser("complete-task", help="Complete a task")
-    complete_parser.add_argument("user")
-    complete_parser.add_argument("title")
-    complete_parser.set_defaults(func=complete_task)
-
-    args = parser.parse_args()
-    if hasattr(args, "func"):
-        args.func(args)
-    else:
-        parser.print_help()
-
-if __name__ == "__main__":
-    main()
-```
-
----
-
-### Task 4: Run and Test the CLI Tool
-
-```bash
-# Add a task
-python lib/cli_tool.py add-task Alice "Write unit tests"
-
-# Complete a task
-python lib/cli_tool.py complete-task Alice "Write unit tests"
-```
-
----
-
-## Best Practices
-
-- Use `argparse` to guide the user experience.
-- Validate input with helpful error messages.
-- Keep CLI and OOP logic modular and separated.
-- Document your script and commands clearly in the README.
-- Use the `__main__` guard to make your CLI script reusable.
-
----
-
-## Conclusion
-
-After completing this lab, you will:
-
-✅ Build structured and modular CLI tools in Python  
-✅ Map real-world entities using object-oriented design  
-✅ Create terminal experiences with helpful input/output  
-✅ Apply argparse and OOP to real development workflows
-
-These skills help you build maintainable CLI tools that scale with complexity and support real-world use cases.
+Abraham Zarate
